@@ -1,15 +1,26 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+
+require('./db');
 const routes = require('./Routes');
-const db = require('./db');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static('Public'));
+
+app.get('/', (req, res) => {
+  return res.status(200).json({
+    message: 'Ticket Booking API is running',
+  });
+});
 
 app.use('/api', routes);
 
-app.listen(6000, () => {
-  console.log('Ticket booking server is running @http://localhost:6000');
+const PORT = process.env.PORT || 6000;
+
+app.listen(PORT, () => {
+  console.log(`Ticket booking server is running @http://localhost:${PORT}`);
 });

@@ -12,8 +12,16 @@ const bookingSchema = new mongoose.Schema(
       ref: 'Event',
       required: true,
     },
-    ticketsBooked: { type: Number, required: true, min: 1 },
-    totalAmount: { type: Number, required: true, min: 0 },
+    ticketsBooked: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    totalAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     bookingStatus: {
       type: String,
       enum: ['CONFIRMED', 'CANCELLED'],
@@ -26,6 +34,6 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ customer: 1, createdAt: -1 });
 bookingSchema.index({ event: 1, createdAt: -1 });
 
-// export default mongoose.model('Booking', bookingSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
+
 module.exports = Booking;

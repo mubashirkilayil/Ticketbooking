@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 mongoose
-  .connect('mongodb://localhost:27017/ticket_bookingDB')
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('Connected to MongoDB');
   })
-  .catch(err => {
-    console.log(err);
+  .catch((e) => {
+    console.log('MongoDB connection error:', e.message);
   });
 
 module.exports = mongoose;

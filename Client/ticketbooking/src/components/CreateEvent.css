@@ -1,0 +1,11 @@
+.form-card { background: white; border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow); padding: 25px; }
+.form-card h3 { margin: 0 0 5px; }
+.form-card > p { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+.event-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.event-form label:nth-child(1), .event-form label:nth-child(3) { grid-column: 1 / -1; }
+.form-actions { grid-column: 1 / -1; }
+
+@media (max-width: 650px) {
+  .event-form { grid-template-columns: 1fr; }
+  .event-form label:nth-child(1), .event-form label:nth-child(3), .form-actions { grid-column: auto; }
+}

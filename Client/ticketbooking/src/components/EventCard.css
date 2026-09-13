@@ -1,0 +1,20 @@
+.event-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  position: relative;
+}
+
+.event-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.category-badge, .ticket-badge { display: inline-flex; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+.category-badge { background: #eef2ff; color: var(--primary); }
+.ticket-badge { background: #e9f8ef; color: var(--success); }
+.ticket-badge.sold { background: #fdecec; color: var(--danger); }
+.date-box { width: 56px; height: 60px; border: 1px solid var(--border); border-radius: 10px; margin: 20px 0 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.date-box strong { font-size: 21px; }
+.date-box span { color: var(--primary); font-size: 11px; font-weight: 700; }
+.event-card h3 { margin: 0 0 8px; font-size: 20px; }
+.description { color: var(--muted); min-height: 50px; font-size: 13px; }
+.event-details { display: flex; flex-direction: column; gap: 7px; padding: 15px 0; margin: 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); color: var(--muted); font-size: 12px; }

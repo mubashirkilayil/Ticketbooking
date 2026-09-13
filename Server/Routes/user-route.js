@@ -1,150 +1,120 @@
 const express = require('express');
-const User = require('../db/Models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+
+const User = require('../db/Models/User');
 
 const router = express.Router();
 
-router.post('/sign-up', async (req, res) => {
+// Register
+router.post('/register', async (req, res) => {
   try {
-    const { email, password, confirmPassword } = req.body;
-    const signupUser = await User.findOne({ email });
+    const { name, email, password, realPassword, role } = req.body;
 
-    if (signupUser) {
+    if (!name || !email || !password) {
       return res.status(400).json({
-        success: false,
-        message: ' This email is already registerd , Please login',
+        message: 'Please fill all required fields',
       });
     }
-    if (password != confirmPassword) {
+
+    if (role && !['ORGANIZER', 'CUSTOMER'].includes(role)) {
       return res.status(400).json({
-        success: false,
-        message: ' Please check the password!',
+        message: 'Invalid role',
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 2);
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters',
+      });
+    }
+
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: 'Email already registered',
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = await User.create({
       ...req.body,
       password: hashedPassword,
+      // realPassword: password,
+      // role: role || 'CUSTOMER',
     });
-    return res.status(200).json({
-      success: true,
-      message: 'New user signup done successfully',
-      newUser,
+
+    return res.status(201).json({
+      message: 'Registration successful',
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({
+      message: e.message,
+    });
   }
 });
+
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const loginUser = await User.findOne({ email });
-    console.log('REQ BODY:', req.body);
-    console.log('DB User:', await User.findOne({ email: req.body.email }));
-    if (!loginUser) {
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
       return res.status(400).json({
         success: false,
         message: ' This email is not registerd yet, please do signup!',
       });
     }
-    const passwordMatch = await bcrypt.compare(password, loginUser.password);
-    if (!passwordMatch) {
+    if (!email || !password) {
       return res.status(400).json({
-        success: false,
-        message: ' Please check the password!',
+        message: 'Please enter email and password',
       });
     }
-    const secret = 'gasudguywegdnw7638bg';
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        message: 'Invalid Credentials',
+      });
+    }
+
     const token = jwt.sign(
-      { id: loginUser._id, name: loginUser.name, role: loginUser.role },
-      secret,
-      { expiresIn: '5h' }
+      {
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
     );
+
     return res.status(200).json({
-      message: 'You are logged in',
-      success: true,
+      message: 'Login successful',
       token,
       user: {
-        name: loginUser.name,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
       },
     });
   } catch (e) {
-    return res.status(500).json({ message: e.message });
+    return res.status(500).json({
+      message: e.message,
+    });
   }
 });
-router.post('/forgot-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const forgetPasswordUser = await User.findOne({ email });
-    if (!forgetPasswordUser) {
-      return res.status(400).json({
-        success: false,
-        message: ' This email is not registerd yet, please do signup!',
-      });
-    }
-    const secret = 'gasudguywegdnw7638bg';
-    const token = jwt.sign({ userId: forgetPasswordUser._id }, secret, {
-      expiresIn: '5h',
-    });
-    const trasporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'learnedfrom8@gmail.com',
-        pass: 'xjmp kzdy geyr feqz',
-      },
-    });
 
-    const mailOptions = {
-      from: 'learnedfrom8@gmail.com',
-      to: email,
-      subject: 'PASSWORD RESET EMAIL',
-      text: `Hai,
-                please reset your password using this token : ${token}`,
-    };
-
-    trasporter.sendMail(mailOptions, () => {
-      return res
-        .status(200)
-        .json({ message: 'Password reset email has been send' });
-    });
-  } catch (e) {
-    return res.status(500).json({ message: e.message });
-  }
-});
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { email, password, confirmPassword, token } = req.body;
-    const resetPassword = await User.findOne({ email });
-    if (!resetPassword) {
-      return res.status(400).json({
-        success: false,
-        message: ' This email is not registerd yet, please do signup!',
-      });
-    }
-    if (password != confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please doesnot matching!',
-      });
-    }
-    const secret = 'gasudguywegdnw7638bg';
-    const decoded = jwt.verify(token, secret);
-    const hashedPassword = await bcrypt.hash(password, 2);
-
-    const updatedPassword = await User.updateOne(
-      { email },
-      { confirmPassword: password },
-      { password: hashedPassword }
-    );
-    return res.status(200).json({
-      success: true,
-      message: 'Password updated successfully',
-      updatedPassword,
-    });
-  } catch (e) {
-    return res.status(500).json({ message: e.message });
-  }
-});
 module.exports = router;
